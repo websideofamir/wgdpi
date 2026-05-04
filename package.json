@@ -1,4 +1,13 @@
 {
+  "name": "wgwrap-prototype",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "wgwrap": "./bin/wgwrap.js"
+  },
+  "scripts": {
+    "test": "vitest run --config vitest.config.js"
+  },
   "devDependencies": {
     "@vitejs/plugin-react": "^6.0.1",
     "vitest": "^4.1.5"
