@@ -176,7 +176,7 @@ function serverReplyWrapperOptions(packet, replyMode, options) {
   return {
     prefix: options.prefix,
     padBytes: options.padBytes,
-    padTo: 0,
+    padTo: options.replyTransportPadTo ?? 0,
   };
 }
 

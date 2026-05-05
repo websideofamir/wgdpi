@@ -179,7 +179,7 @@ server -> client UDP length 1510
 
 With `--pad-min 900 --pad-max 1280`, public UDP lengths should vary within that range unless the inner WireGuard packet is larger than the selected target.
 
-For high-volume downlink traffic, `--reply-mode mixed` wraps handshake/control replies but sends transport data replies plain. `--reply-mode adaptive` keeps transport replies wrapped but does not force fixed-size padding on transport replies, reducing downlink padding amplification without exposing plain WireGuard replies.
+For high-volume downlink traffic, `--reply-mode mixed` wraps handshake/control replies but sends transport data replies plain. `--reply-mode adaptive` keeps transport replies wrapped but does not force fixed-size padding on transport replies by default. Use `--reply-transport-pad-to` with adaptive mode to set a smaller fixed transport reply target such as `1400`.
 
 Loopback traffic should show normal WireGuard:
 

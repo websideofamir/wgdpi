@@ -291,6 +291,12 @@ If mixed replies handshake but ping fails, test adaptive replies:
 node bin/wgwrap.js server --listen 0.0.0.0:9091 --wireguard 127.0.0.1:51820 --pad-to 1510 --pad-bytes zero --prefix 7a21c90e --reply-mode adaptive
 ```
 
+If unpadded adaptive transport replies do not complete the tunnel, test an intermediate transport reply padding target:
+
+```bash
+node bin/wgwrap.js server --listen 0.0.0.0:9091 --wireguard 127.0.0.1:51820 --pad-to 1510 --pad-bytes zero --prefix 7a21c90e --reply-mode adaptive --reply-transport-pad-to 1400
+```
+
 ## Capture For Debugging
 
 Public wrapper traffic:

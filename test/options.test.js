@@ -68,9 +68,11 @@ describe('parseCliArgs', () => {
       '--listen', '0.0.0.0:9091',
       '--wireguard', '127.0.0.1:51820',
       '--reply-mode', 'mixed',
+      '--reply-transport-pad-to', '1400',
     ]);
 
     expect(options.replyMode).toBe('mixed');
+    expect(options.replyTransportPadTo).toBe(1400);
 
     const adaptiveOptions = parseCliArgs([
       'server',

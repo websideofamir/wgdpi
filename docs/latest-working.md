@@ -154,6 +154,14 @@ If mixed mode handshakes but ping fails, test adaptive replies:
 
 Adaptive mode keeps all server replies wrapped, but transport data replies are wrapped only with the 6-byte wrapper header and no fixed `1510` padding. This avoids plain WireGuard replies while reducing downlink padding amplification.
 
+If unpadded adaptive replies do not complete the tunnel, test an intermediate transport reply target:
+
+```text
+--reply-mode adaptive --reply-transport-pad-to 1400
+```
+
+This keeps handshake/control replies at `1510`, but pads wrapped transport replies only to `1400`.
+
 ## Rollback
 
 If the next stage is worse, restore this server wrapper command:

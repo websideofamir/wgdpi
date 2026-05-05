@@ -14,6 +14,7 @@ export function parseCliArgs(argv) {
   const padMax = parseIntegerFlag(flags, 'pad-max', undefined);
   const prefix = parsePrefixFlag(flags, 'prefix', DEFAULT_PREFIX);
   const padBytes = parseEnumFlag(flags, 'pad-bytes', 'random', ['random', 'zero']);
+  const replyTransportPadTo = parseIntegerFlag(flags, 'reply-transport-pad-to', undefined);
   const logIntervalMs = parseIntegerFlag(flags, 'log-interval-ms', DEFAULT_LOG_INTERVAL_MS);
 
   if ((padMin === undefined) !== (padMax === undefined)) {
@@ -56,6 +57,7 @@ export function parseCliArgs(argv) {
     padMax,
     prefix,
     padBytes,
+    replyTransportPadTo,
     logIntervalMs,
   };
 }
@@ -75,6 +77,8 @@ Options:
   --pad-bytes MODE             Padding bytes: random or zero. Default: random.
   --prefix HEX                 4-byte wrapper prefix as 8 hex chars. Default: 00000000.
   --reply-mode MODE            Server replies: plain, wrapped, adaptive, or mixed. Default: plain.
+  --reply-transport-pad-to BYTES
+                               Adaptive mode transport reply payload size. Default: no fixed padding.
   --allow-plain-clients        Server accepts unwrapped client packets too.
   --endpoint-ttl-ms MS         Server endpoint mapping TTL. Default: 180000.
   --log-interval-ms MS         Periodic traffic summary interval. Default: 60000. Use 0 to disable.
