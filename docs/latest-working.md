@@ -136,7 +136,7 @@ This working profile wraps server replies too:
 
 That means high-volume downlink traffic such as YouTube and speedtest is padded to large UDP packets on the return path. This likely causes fragmentation and queue pressure under traffic surge.
 
-## Next Stage To Test
+## Next Stages To Test
 
 Test mixed server replies while keeping everything else the same:
 
@@ -145,6 +145,14 @@ Test mixed server replies while keeping everything else the same:
 ```
 
 Mixed mode wraps handshake/control replies so the tunnel can establish on restrictive paths, then sends transport data replies plain to avoid padding amplification on high-volume downlink traffic.
+
+If mixed mode handshakes but ping fails, test adaptive replies:
+
+```text
+--reply-mode adaptive
+```
+
+Adaptive mode keeps all server replies wrapped, but transport data replies are wrapped only with the 6-byte wrapper header and no fixed `1510` padding. This avoids plain WireGuard replies while reducing downlink padding amplification.
 
 ## Rollback
 

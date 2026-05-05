@@ -285,6 +285,12 @@ If wrapped replies work but high-volume downlink traffic is unstable, test mixed
 node bin/wgwrap.js server --listen 0.0.0.0:9091 --wireguard 127.0.0.1:51820 --pad-to 1510 --pad-bytes zero --prefix 7a21c90e --reply-mode mixed
 ```
 
+If mixed replies handshake but ping fails, test adaptive replies:
+
+```bash
+node bin/wgwrap.js server --listen 0.0.0.0:9091 --wireguard 127.0.0.1:51820 --pad-to 1510 --pad-bytes zero --prefix 7a21c90e --reply-mode adaptive
+```
+
 ## Capture For Debugging
 
 Public wrapper traffic:

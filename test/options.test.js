@@ -62,7 +62,7 @@ describe('parseCliArgs', () => {
     ])).toThrow('--pad-bytes must be one of: random, zero');
   });
 
-  it('parses mixed server reply mode', () => {
+  it('parses mixed and adaptive server reply modes', () => {
     const options = parseCliArgs([
       'server',
       '--listen', '0.0.0.0:9091',
@@ -71,5 +71,14 @@ describe('parseCliArgs', () => {
     ]);
 
     expect(options.replyMode).toBe('mixed');
+
+    const adaptiveOptions = parseCliArgs([
+      'server',
+      '--listen', '0.0.0.0:9091',
+      '--wireguard', '127.0.0.1:51820',
+      '--reply-mode', 'adaptive',
+    ]);
+
+    expect(adaptiveOptions.replyMode).toBe('adaptive');
   });
 });

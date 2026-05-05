@@ -95,7 +95,7 @@ export async function createServerWrapper(options) {
 
     try {
       const outgoing = shouldWrapServerReply(packet, replyMode)
-        ? wrapPacket(packet, wrapperOptions(options))
+        ? wrapPacket(packet, serverReplyWrapperOptions(packet, replyMode, options))
         : packet;
 
       if (outgoing !== packet) {
@@ -151,12 +151,33 @@ function shouldWrapServerReply(packet, replyMode) {
     return true;
   }
 
+  if (replyMode === 'adaptive') {
+    return true;
+  }
+
   if (replyMode === 'plain') {
     return false;
   }
 
   const parsed = parseWireGuardPacket(packet);
   return parsed?.type !== 4;
+}
+
+function serverReplyWrapperOptions(packet, replyMode, options) {
+  if (replyMode !== 'adaptive') {
+    return wrapperOptions(options);
+  }
+
+  const parsed = parseWireGuardPacket(packet);
+  if (parsed?.type !== 4) {
+    return wrapperOptions(options);
+  }
+
+  return {
+    prefix: options.prefix,
+    padBytes: options.padBytes,
+    padTo: 0,
+  };
 }
 
 function startTrafficSummary(name, counters, lastEndpoint, logger, intervalMs) {
