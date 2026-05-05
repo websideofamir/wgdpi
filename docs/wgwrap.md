@@ -7,7 +7,7 @@ This prototype tests the packet format observed in your provider capture while k
 The client sends stock WireGuard to a local UDP wrapper. The wrapper changes the public packet shape before it reaches the network:
 
 ```text
-00 00 00 00 + length + stock WireGuard packet + zero padding
+00 00 00 00 + length + stock WireGuard packet + random padding
 ```
 
 The server wrapper strips that envelope and forwards the original WireGuard packet to the local WireGuard server.

@@ -11,7 +11,7 @@ The project is a prototype and transport experiment. It is not a replacement for
 The client wrapper accepts stock WireGuard UDP packets from a local WireGuard app and sends wrapped packets to the server:
 
 ```text
-00 00 00 00 + 2-byte little-endian length + raw WireGuard packet + padding
+00 00 00 00 + 2-byte little-endian length + raw WireGuard packet + random padding
 ```
 
 The server wrapper receives the public wrapped packets, extracts the raw WireGuard payload, and forwards it to a local stock WireGuard server.
@@ -63,7 +63,7 @@ Wrapped packet layout:
 offset 0:  00 00 00 00
 offset 4:  uint16 little-endian raw WireGuard packet length
 offset 6:  raw WireGuard packet
-tail:      padding up to --pad-to bytes
+tail:      random padding up to --pad-to bytes
 ```
 
 Example wrapped 148-byte WireGuard handshake initiation:

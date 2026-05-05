@@ -1,3 +1,5 @@
+import { randomFillSync } from 'node:crypto';
+
 export const DEFAULT_PREFIX = Buffer.from([0x00, 0x00, 0x00, 0x00]);
 export const WRAPPER_HEADER_LENGTH = 6;
 export const DEFAULT_PAD_TO = 1510;
@@ -48,6 +50,12 @@ export function wrapPacket(packet, options = {}) {
   prefix.copy(wrapped, 0);
   wrapped.writeUInt16LE(packet.length, 4);
   packet.copy(wrapped, WRAPPER_HEADER_LENGTH);
+
+  const paddingLength = targetLength - minimumLength;
+  if (paddingLength > 0) {
+    randomFillSync(wrapped, minimumLength, paddingLength);
+  }
+
   return wrapped;
 }
 

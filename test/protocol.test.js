@@ -10,7 +10,7 @@ import {
 } from '../src/protocol.js';
 
 describe('protocol wrapper', () => {
-  it('wraps packets with prefix, little-endian length, inner packet, and zero padding', () => {
+  it('wraps packets with prefix, little-endian length, inner packet, and random padding', () => {
     const handshake = Buffer.alloc(148, 0xaa);
     handshake.writeUInt32LE(1, 0);
     handshake.writeUInt32LE(0x230b4caf, 4);
@@ -21,7 +21,9 @@ describe('protocol wrapper', () => {
     expect(wrapped.subarray(0, 4)).toEqual(DEFAULT_PREFIX);
     expect(wrapped.readUInt16LE(4)).toBe(148);
     expect(wrapped.subarray(6, 154)).toEqual(handshake);
-    expect(wrapped.subarray(154).every((byte) => byte === 0)).toBe(true);
+    const padding = wrapped.subarray(154);
+    expect(padding).toHaveLength(1356);
+    expect(padding.some((byte) => byte !== 0)).toBe(true);
   });
 
   it('unwraps packets and reports padding length', () => {

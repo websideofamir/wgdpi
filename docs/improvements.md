@@ -11,7 +11,7 @@ Current public packets have recognizable traits:
 - Fixed prefix: `00 00 00 00`.
 - Fixed length field at byte offset `4`.
 - Raw WireGuard packet starts at byte offset `6`.
-- Padding is zero-filled.
+- Padding length is fixed by default.
 - Many packets have the exact same public UDP length, for example `1510`.
 - Keepalive and handshake timing still follows normal WireGuard behavior.
 - Traffic is still direct UDP to one server IP and one server port.
@@ -43,7 +43,7 @@ This is better than:
 
 ### Random Padding Bytes
 
-Current padding is zero-filled. Replace zero padding with random bytes.
+Padding bytes are filled with random data instead of zeros.
 
 The receiver already uses the embedded length field, so padding content does not need to be meaningful.
 
@@ -277,13 +277,12 @@ Move CLI flags into a config file:
 ## Recommended Next Development Order
 
 1. Add random padding length.
-2. Add random padding bytes.
-3. Add configurable prefix.
-4. Add structured logging/counters.
-5. Add macOS route helper script.
-6. Add launchd plist for the client wrapper.
-7. Add HMAC/keyed wrapper envelope.
-8. Improve multi-client mapping.
-9. Consider native WireGuard client patch.
+2. Add configurable prefix.
+3. Add structured logging/counters.
+4. Add macOS route helper script.
+5. Add launchd plist for the client wrapper.
+6. Add HMAC/keyed wrapper envelope.
+7. Improve multi-client mapping.
+8. Consider native WireGuard client patch.
 
-The first three items provide the biggest anti-fingerprinting improvement with the smallest code change.
+The first two remaining items provide the biggest anti-fingerprinting improvement with the smallest code change.

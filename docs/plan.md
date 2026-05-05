@@ -7,7 +7,7 @@ Build a self-hosted prototype that reproduces the provider-like WireGuard packet
 The captured client-to-server packet looked like:
 
 ```text
-00 00 00 00 94 00 01 00 00 00 ... zero padding
+00 00 00 00 94 00 01 00 00 00 ... padding
 ```
 
 That means:
@@ -42,7 +42,7 @@ Client-to-server packets are wrapped as:
 offset 0:  00 00 00 00
 offset 4:  uint16 little-endian raw WireGuard packet length
 offset 6:  raw WireGuard packet
-tail:      zero padding up to --pad-to bytes
+tail:      random padding up to --pad-to bytes
 ```
 
 Default padding target:
