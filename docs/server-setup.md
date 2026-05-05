@@ -279,6 +279,12 @@ If the latest code fails but the old legacy profile worked, test exact legacy pa
 node bin/wgwrap.js server --listen 0.0.0.0:9091 --wireguard 127.0.0.1:51820 --pad-to 1510 --pad-bytes zero --reply-mode wrapped
 ```
 
+If wrapped replies work but high-volume downlink traffic is unstable, test mixed replies:
+
+```bash
+node bin/wgwrap.js server --listen 0.0.0.0:9091 --wireguard 127.0.0.1:51820 --pad-to 1510 --pad-bytes zero --prefix 7a21c90e --reply-mode mixed
+```
+
 ## Capture For Debugging
 
 Public wrapper traffic:

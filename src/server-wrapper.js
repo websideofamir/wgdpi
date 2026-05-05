@@ -1,7 +1,13 @@
 import dgram from 'node:dgram';
 
 import { EndpointMap } from './endpoint-map.js';
-import { DEFAULT_PAD_TO, DEFAULT_PREFIX, normalizePacket, wrapPacket } from './protocol.js';
+import {
+  DEFAULT_PAD_TO,
+  DEFAULT_PREFIX,
+  normalizePacket,
+  parseWireGuardPacket,
+  wrapPacket,
+} from './protocol.js';
 
 export async function createServerWrapper(options) {
   const publicSocket = dgram.createSocket('udp4');
@@ -88,11 +94,11 @@ export async function createServerWrapper(options) {
     }
 
     try {
-      const outgoing = replyMode === 'wrapped'
+      const outgoing = shouldWrapServerReply(packet, replyMode)
         ? wrapPacket(packet, wrapperOptions(options))
         : packet;
 
-      if (replyMode === 'wrapped') {
+      if (outgoing !== packet) {
         counters.wrappedReplies += 1;
       }
 
@@ -138,6 +144,19 @@ function wrapperOptions(options) {
     prefix: options.prefix,
     padBytes: options.padBytes,
   };
+}
+
+function shouldWrapServerReply(packet, replyMode) {
+  if (replyMode === 'wrapped') {
+    return true;
+  }
+
+  if (replyMode === 'plain') {
+    return false;
+  }
+
+  const parsed = parseWireGuardPacket(packet);
+  return parsed?.type !== 4;
 }
 
 function startTrafficSummary(name, counters, lastEndpoint, logger, intervalMs) {

@@ -61,4 +61,15 @@ describe('parseCliArgs', () => {
       '--pad-bytes', 'garbage',
     ])).toThrow('--pad-bytes must be one of: random, zero');
   });
+
+  it('parses mixed server reply mode', () => {
+    const options = parseCliArgs([
+      'server',
+      '--listen', '0.0.0.0:9091',
+      '--wireguard', '127.0.0.1:51820',
+      '--reply-mode', 'mixed',
+    ]);
+
+    expect(options.replyMode).toBe('mixed');
+  });
 });

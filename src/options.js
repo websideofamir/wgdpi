@@ -48,7 +48,7 @@ export function parseCliArgs(argv) {
     listen: parseEndpoint(required(flags, 'listen'), 'listen'),
     wireguard: parseEndpoint(required(flags, 'wireguard'), 'wireguard'),
     wireguardBindHost: flags['wireguard-bind-host'],
-    replyMode: flags['reply-mode'] ?? 'plain',
+    replyMode: parseEnumFlag(flags, 'reply-mode', 'plain', ['plain', 'wrapped', 'mixed']),
     allowPlainClients: Boolean(flags['allow-plain-clients']),
     endpointTtlMs: parseIntegerFlag(flags, 'endpoint-ttl-ms', undefined),
     padTo,
@@ -74,7 +74,7 @@ Options:
   --pad-max BYTES              Maximum random wrapped UDP payload size.
   --pad-bytes MODE             Padding bytes: random or zero. Default: random.
   --prefix HEX                 4-byte wrapper prefix as 8 hex chars. Default: 00000000.
-  --reply-mode MODE            Server replies: plain or wrapped. Default: plain.
+  --reply-mode MODE            Server replies: plain, wrapped, or mixed. Default: plain.
   --allow-plain-clients        Server accepts unwrapped client packets too.
   --endpoint-ttl-ms MS         Server endpoint mapping TTL. Default: 180000.
   --log-interval-ms MS         Periodic traffic summary interval. Default: 60000. Use 0 to disable.
