@@ -7,7 +7,7 @@ This prototype tests the packet format observed in your provider capture while k
 The client sends stock WireGuard to a local UDP wrapper. The wrapper changes the public packet shape before it reaches the network:
 
 ```text
-00 00 00 00 + length + stock WireGuard packet + random padding
+prefix + length + stock WireGuard packet + random padding
 ```
 
 The server wrapper strips that envelope and forwards the original WireGuard packet to the local WireGuard server.
@@ -191,6 +191,12 @@ Run the server wrapper from this repo:
 node bin/wgwrap.js server --listen 0.0.0.0:9091 --wireguard 127.0.0.1:51820 --pad-to 1510 --reply-mode plain
 ```
 
+For randomized public packet sizes and a deployment-specific prefix, use matching settings on the client and server:
+
+```bash
+node bin/wgwrap.js server --listen 0.0.0.0:9091 --wireguard 127.0.0.1:51820 --pad-min 900 --pad-max 1280 --prefix 7a21c90e --reply-mode wrapped
+```
+
 For a quick server packet check:
 
 ```bash
@@ -235,6 +241,14 @@ Run the client wrapper before connecting WireGuard:
 ```bash
 node bin/wgwrap.js client --listen 127.0.0.1:51821 --remote YOUR_SERVER_IP:9091 --pad-to 1510
 ```
+
+Randomized profile example:
+
+```bash
+node bin/wgwrap.js client --listen 127.0.0.1:51821 --remote YOUR_SERVER_IP:9091 --pad-min 900 --pad-max 1280 --prefix 7a21c90e
+```
+
+The same `--prefix`, `--pad-min`, and `--pad-max` values must be configured on both sides.
 
 Configure the WireGuard macOS app to use the local wrapper as its endpoint:
 

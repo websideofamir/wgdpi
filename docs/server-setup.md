@@ -12,6 +12,7 @@ Server VPN IP: 10.44.0.1
 Client VPN IP: 10.44.0.2
 Wrapper mode: --reply-mode wrapped
 Padding: --pad-to 1510
+Prefix: default 00000000
 ```
 
 Replace placeholders:
@@ -261,8 +262,16 @@ node bin/wgwrap.js server --listen 0.0.0.0:9091 --wireguard 127.0.0.1:51820 --pa
 Expected:
 
 ```text
-server wrapper listening on 0.0.0.0:9091, forwarding to WireGuard at 127.0.0.1:51820, reply mode wrapped
+server wrapper listening on 0.0.0.0:9091, forwarding to WireGuard at 127.0.0.1:51820, reply mode wrapped, fixed padding length 1510, prefix 0x00000000
 ```
+
+After the baseline works, you can switch to randomized padding and a deployment-specific prefix. The client must use the same `--pad-min`, `--pad-max`, and `--prefix` values:
+
+```bash
+node bin/wgwrap.js server --listen 0.0.0.0:9091 --wireguard 127.0.0.1:51820 --pad-min 900 --pad-max 1280 --prefix 7a21c90e --reply-mode wrapped
+```
+
+The wrapper logs startup settings, the active client endpoint when it changes, first occurrences of dropped/error packets, and a traffic summary every 60 seconds. Use `--log-interval-ms 0` to disable periodic summaries.
 
 ## Capture For Debugging
 
@@ -286,6 +295,8 @@ any/9091: server -> client UDP length 1510
 lo/51820: 127.0.0.1.X -> 127.0.0.1.51820 UDP length 148
 lo/51820: 127.0.0.1.51820 -> 127.0.0.1.X UDP length 92
 ```
+
+With `--pad-min 900 --pad-max 1280`, public `9091` UDP lengths should vary within that range unless the inner WireGuard packet is larger than the selected target.
 
 ## systemd Service
 
@@ -334,6 +345,12 @@ View logs:
 
 ```bash
 journalctl -u wgwrap.service -f
+```
+
+If you use a randomized profile, update `ExecStart` to use the same settings as the client:
+
+```ini
+ExecStart=/usr/bin/node /opt/wgdpi/bin/wgwrap.js server --listen 0.0.0.0:9091 --wireguard 127.0.0.1:51820 --pad-min 900 --pad-max 1280 --prefix 7a21c90e --reply-mode wrapped
 ```
 
 Check service configuration:

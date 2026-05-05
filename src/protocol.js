@@ -1,4 +1,4 @@
-import { randomFillSync } from 'node:crypto';
+import { randomFillSync, randomInt } from 'node:crypto';
 
 export const DEFAULT_PREFIX = Buffer.from([0x00, 0x00, 0x00, 0x00]);
 export const WRAPPER_HEADER_LENGTH = 6;
@@ -25,7 +25,6 @@ export class ProtocolError extends Error {
  */
 export function wrapPacket(packet, options = {}) {
   const prefix = options.prefix ?? DEFAULT_PREFIX;
-  const padTo = options.padTo ?? DEFAULT_PAD_TO;
 
   if (!Buffer.isBuffer(packet)) {
     throw new ProtocolError('packet must be a Buffer');
@@ -40,7 +39,7 @@ export function wrapPacket(packet, options = {}) {
   }
 
   const minimumLength = WRAPPER_HEADER_LENGTH + packet.length;
-  const targetLength = Math.max(minimumLength, padTo || minimumLength);
+  const targetLength = chooseTargetLength(minimumLength, options);
 
   if (targetLength > MAX_UDP_PAYLOAD) {
     throw new ProtocolError('wrapped packet would exceed the maximum UDP payload');
@@ -164,6 +163,27 @@ function startsWith(packet, prefix) {
   }
 
   return true;
+}
+
+function chooseTargetLength(minimumLength, options) {
+  if (options.padMin !== undefined || options.padMax !== undefined) {
+    const padMin = options.padMin;
+    const padMax = options.padMax;
+
+    if (!Number.isInteger(padMin) || !Number.isInteger(padMax) || padMin < 0 || padMax < 0) {
+      throw new ProtocolError('padMin and padMax must be non-negative integers');
+    }
+
+    if (padMax < padMin) {
+      throw new ProtocolError('padMax must be greater than or equal to padMin');
+    }
+
+    const selectedLength = padMin === padMax ? padMin : randomInt(padMin, padMax + 1);
+    return Math.max(minimumLength, selectedLength);
+  }
+
+  const padTo = options.padTo ?? DEFAULT_PAD_TO;
+  return Math.max(minimumLength, padTo || minimumLength);
 }
 
 function wireGuardTypeName(type) {

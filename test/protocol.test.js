@@ -37,6 +37,45 @@ describe('protocol wrapper', () => {
     expect(unwrapped.paddingLength).toBe(158);
   });
 
+  it('randomizes wrapped packet length within a configured range', () => {
+    const packet = Buffer.alloc(92, 0xbb);
+    packet.writeUInt32LE(2, 0);
+    const lengths = new Set();
+
+    for (let index = 0; index < 64; index += 1) {
+      const wrapped = wrapPacket(packet, { padMin: 128, padMax: 160 });
+      lengths.add(wrapped.length);
+
+      expect(wrapped.length).toBeGreaterThanOrEqual(128);
+      expect(wrapped.length).toBeLessThanOrEqual(160);
+      expect(unwrapPacket(wrapped).packet).toEqual(packet);
+    }
+
+    expect(lengths.size).toBeGreaterThan(1);
+  });
+
+  it('uses the minimum valid length when a random padding range is smaller than the packet', () => {
+    const packet = Buffer.alloc(148, 0xaa);
+    packet.writeUInt32LE(1, 0);
+
+    const wrapped = wrapPacket(packet, { padMin: 64, padMax: 80 });
+
+    expect(wrapped).toHaveLength(154);
+    expect(unwrapPacket(wrapped).packet).toEqual(packet);
+  });
+
+  it('uses a custom prefix when wrapping and unwrapping packets', () => {
+    const packet = Buffer.alloc(92, 0xbb);
+    const prefix = Buffer.from('7a21c90e', 'hex');
+    packet.writeUInt32LE(2, 0);
+
+    const wrapped = wrapPacket(packet, { padTo: 256, prefix });
+
+    expect(wrapped.subarray(0, 4)).toEqual(prefix);
+    expect(unwrapPacket(wrapped)).toBeNull();
+    expect(unwrapPacket(wrapped, { prefix }).packet).toEqual(packet);
+  });
+
   it('normalizes plain packets when allowed', () => {
     const packet = Buffer.from([1, 2, 3]);
 

@@ -6,9 +6,9 @@ The current implementation is intentionally simple. It proves that wrapping Wire
 
 ## Current Fingerprint
 
-Current public packets have recognizable traits:
+Default public packets still have recognizable traits unless the configurable hardening options are enabled:
 
-- Fixed prefix: `00 00 00 00`.
+- Default prefix: `00 00 00 00`.
 - Fixed length field at byte offset `4`.
 - Raw WireGuard packet starts at byte offset `6`.
 - Padding length is fixed by default.
@@ -21,6 +21,8 @@ This may bypass simple WireGuard signature matching, but it can become its own s
 ## Highest-Value Improvements
 
 ### Random Padding Length
+
+Implemented with `--pad-min` and `--pad-max`.
 
 Instead of always padding to a fixed size, choose a random target within a range:
 
@@ -48,6 +50,8 @@ Padding bytes are filled with random data instead of zeros.
 The receiver already uses the embedded length field, so padding content does not need to be meaningful.
 
 ### Configurable Prefix
+
+Implemented with `--prefix`.
 
 Make the prefix configurable per deployment:
 
@@ -130,6 +134,8 @@ Profile C: random pad 900-1280, MTU 1100, keepalive 10
 The client and server should use compatible padding behavior.
 
 ### Better Logging
+
+Partially implemented with startup settings, endpoint-change logs, first drop/error warnings, and periodic traffic summaries.
 
 Add counters for:
 
@@ -276,13 +282,8 @@ Move CLI flags into a config file:
 
 ## Recommended Next Development Order
 
-1. Add random padding length.
-2. Add configurable prefix.
-3. Add structured logging/counters.
-4. Add macOS route helper script.
-5. Add launchd plist for the client wrapper.
-6. Add HMAC/keyed wrapper envelope.
-7. Improve multi-client mapping.
-8. Consider native WireGuard client patch.
-
-The first two remaining items provide the biggest anti-fingerprinting improvement with the smallest code change.
+1. Add macOS route helper script.
+2. Add launchd plist for the client wrapper.
+3. Add HMAC/keyed wrapper envelope.
+4. Improve multi-client mapping.
+5. Consider native WireGuard client patch.

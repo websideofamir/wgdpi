@@ -1,4 +1,6 @@
-import { DEFAULT_PAD_TO } from './protocol.js';
+import { DEFAULT_PAD_TO, DEFAULT_PREFIX, MAX_UDP_PAYLOAD } from './protocol.js';
+
+const DEFAULT_LOG_INTERVAL_MS = 60_000;
 
 export function parseCliArgs(argv) {
   const [mode, ...rest] = argv;
@@ -8,6 +10,22 @@ export function parseCliArgs(argv) {
 
   const flags = parseFlags(rest);
   const padTo = parseIntegerFlag(flags, 'pad-to', DEFAULT_PAD_TO);
+  const padMin = parseIntegerFlag(flags, 'pad-min', undefined);
+  const padMax = parseIntegerFlag(flags, 'pad-max', undefined);
+  const prefix = parsePrefixFlag(flags, 'prefix', DEFAULT_PREFIX);
+  const logIntervalMs = parseIntegerFlag(flags, 'log-interval-ms', DEFAULT_LOG_INTERVAL_MS);
+
+  if ((padMin === undefined) !== (padMax === undefined)) {
+    throw new Error('--pad-min and --pad-max must be used together');
+  }
+
+  if (padMin !== undefined && padMax < padMin) {
+    throw new Error('--pad-max must be greater than or equal to --pad-min');
+  }
+
+  if (padMax !== undefined && padMax > MAX_UDP_PAYLOAD) {
+    throw new Error(`--pad-max must be less than or equal to ${MAX_UDP_PAYLOAD}`);
+  }
 
   if (mode === 'client') {
     return {
@@ -16,6 +34,10 @@ export function parseCliArgs(argv) {
       remote: parseEndpoint(required(flags, 'remote'), 'remote'),
       remoteBindHost: flags['remote-bind-host'],
       padTo,
+      padMin,
+      padMax,
+      prefix,
+      logIntervalMs,
     };
   }
 
@@ -28,6 +50,10 @@ export function parseCliArgs(argv) {
     allowPlainClients: Boolean(flags['allow-plain-clients']),
     endpointTtlMs: parseIntegerFlag(flags, 'endpoint-ttl-ms', undefined),
     padTo,
+    padMin,
+    padMax,
+    prefix,
+    logIntervalMs,
   };
 }
 
@@ -40,10 +66,14 @@ Options:
   --listen HOST:PORT           Local UDP listener.
   --remote HOST:PORT           Client mode upstream wrapper endpoint.
   --wireguard HOST:PORT        Server mode local stock WireGuard endpoint.
-  --pad-to BYTES               Wrapped UDP payload size. Default: 1510.
+  --pad-to BYTES               Fixed wrapped UDP payload size. Default: 1510.
+  --pad-min BYTES              Minimum random wrapped UDP payload size.
+  --pad-max BYTES              Maximum random wrapped UDP payload size.
+  --prefix HEX                 4-byte wrapper prefix as 8 hex chars. Default: 00000000.
   --reply-mode MODE            Server replies: plain or wrapped. Default: plain.
   --allow-plain-clients        Server accepts unwrapped client packets too.
   --endpoint-ttl-ms MS         Server endpoint mapping TTL. Default: 180000.
+  --log-interval-ms MS         Periodic traffic summary interval. Default: 60000. Use 0 to disable.
 `;
 }
 
@@ -99,6 +129,19 @@ function parseIntegerFlag(flags, name, fallback) {
   }
 
   return value;
+}
+
+function parsePrefixFlag(flags, name, fallback) {
+  const value = flags[name];
+  if (value === undefined) {
+    return fallback;
+  }
+
+  if (value === true || !/^[0-9a-fA-F]{8}$/.test(value)) {
+    throw new Error(`--${name} must be exactly 8 hex characters`);
+  }
+
+  return Buffer.from(value, 'hex');
 }
 
 function required(flags, name) {

@@ -77,7 +77,7 @@ SERVER_PUBLIC_KEY
 
 ## Start Client Wrapper
 
-Use the same `--pad-to` value as the server. Start with the known-good baseline:
+Use the same padding mode and prefix as the server. Start with the known-good baseline:
 
 ```bash
 cd /path/to/wgdpi
@@ -87,10 +87,18 @@ node bin/wgwrap.js client --listen 127.0.0.1:51821 --remote YOUR_SERVER_IP:9091 
 Expected:
 
 ```text
-client wrapper listening on 127.0.0.1:51821, forwarding to YOUR_SERVER_IP:9091
+client wrapper listening on 127.0.0.1:51821, forwarding to YOUR_SERVER_IP:9091, fixed padding length 1510, prefix 0x00000000
 ```
 
 Keep this terminal open while testing.
+
+After the baseline works, you can switch to randomized padding and a deployment-specific prefix. The server must use the same `--pad-min`, `--pad-max`, and `--prefix` values:
+
+```bash
+node bin/wgwrap.js client --listen 127.0.0.1:51821 --remote YOUR_SERVER_IP:9091 --pad-min 900 --pad-max 1280 --prefix 7a21c90e
+```
+
+The wrapper logs startup settings, the active local WireGuard peer when it changes, first occurrences of dropped/error packets, and a traffic summary every 60 seconds. Use `--log-interval-ms 0` to disable periodic summaries.
 
 ## Split Tunnel Mode
 
@@ -271,6 +279,8 @@ PersistentKeepalive = 10
 
 Test split tunnel for several minutes before trying full tunnel.
 
+If you use `--pad-min 900 --pad-max 1280`, set the WireGuard `MTU` low enough that normal transport packets fit inside the range. Start with `MTU = 1100`.
+
 ## Client Debugging
 
 macOS public capture:
@@ -291,6 +301,8 @@ Expected public traffic with wrapped replies:
 mac -> server UDP length 1510
 server -> mac UDP length 1510
 ```
+
+With `--pad-min 900 --pad-max 1280`, public UDP lengths should vary within that range unless the inner WireGuard packet is larger than the selected target.
 
 Expected local traffic:
 

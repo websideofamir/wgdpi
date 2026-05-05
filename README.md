@@ -60,10 +60,10 @@ This project does not solve every blocking case. It will not help if all UDP is 
 Wrapped packet layout:
 
 ```text
-offset 0:  00 00 00 00
+offset 0:  4-byte wrapper prefix, default 00 00 00 00
 offset 4:  uint16 little-endian raw WireGuard packet length
 offset 6:  raw WireGuard packet
-tail:      random padding up to --pad-to bytes
+tail:      random padding up to --pad-to bytes, or a random --pad-min/--pad-max target
 ```
 
 Example wrapped 148-byte WireGuard handshake initiation:
@@ -104,6 +104,14 @@ PersistentKeepalive: 10
 
 Test the baseline first, then tune.
 
+For a more fingerprint-resistant profile after the baseline works, use matching random padding and prefix settings on both sides:
+
+```text
+Server wrapper: --pad-min 900 --pad-max 1280 --prefix 7a21c90e --reply-mode wrapped
+Client wrapper: --pad-min 900 --pad-max 1280 --prefix 7a21c90e
+WireGuard MTU: 1100
+```
+
 ## Quick Start
 
 Server:
@@ -118,6 +126,13 @@ Client:
 node bin/wgwrap.js client --listen 127.0.0.1:51821 --remote YOUR_SERVER_IP:9091 --pad-to 1510
 ```
 
+Randomized profile example:
+
+```bash
+node bin/wgwrap.js server --listen 0.0.0.0:9091 --wireguard 127.0.0.1:51820 --pad-min 900 --pad-max 1280 --prefix 7a21c90e --reply-mode wrapped
+node bin/wgwrap.js client --listen 127.0.0.1:51821 --remote YOUR_SERVER_IP:9091 --pad-min 900 --pad-max 1280 --prefix 7a21c90e
+```
+
 ## Documentation
 
 - `docs/server-setup.md`: Ubuntu server setup, WireGuard config, iptables, Oracle/Docker notes, and systemd service.
@@ -129,7 +144,7 @@ node bin/wgwrap.js client --listen 127.0.0.1:51821 --remote YOUR_SERVER_IP:9091 
 
 - IPv4 UDP only in the current implementation.
 - The wrapper does not hide the server IP or the fact that UDP is being used.
-- The current fixed prefix and fixed packet size can itself become fingerprintable.
+- The default fixed prefix and fixed packet size can itself become fingerprintable if random padding and a custom prefix are not configured.
 - The client wrapper requires a local process on the client machine.
 - Full tunnel mode requires a route exception for the real server IP on macOS.
 - Multi-client support is best-effort and should be tested before relying on it.
@@ -154,6 +169,8 @@ With wrapped replies, public traffic should show wrapped packets both ways:
 client -> server UDP length 1510
 server -> client UDP length 1510
 ```
+
+With `--pad-min 900 --pad-max 1280`, public UDP lengths should vary within that range unless the inner WireGuard packet is larger than the selected target.
 
 Loopback traffic should show normal WireGuard:
 
