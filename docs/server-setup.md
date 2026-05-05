@@ -177,8 +177,8 @@ ListenPort = 51820
 PrivateKey = SERVER_PRIVATE_KEY
 
 PostUp = sysctl -w net.ipv4.ip_forward=1
-PostUp = iptables -C INPUT -p udp --dport 9091 -j ACCEPT 2>/dev/null || iptables -I INPUT 5 -p udp --dport 9091 -j ACCEPT
-PostUp = iptables -C INPUT -i %i -j ACCEPT 2>/dev/null || iptables -I INPUT 5 -i %i -j ACCEPT
+PostUp = iptables -C INPUT -p udp --dport 9091 -j ACCEPT 2>/dev/null || iptables -I INPUT 1 -p udp --dport 9091 -j ACCEPT
+PostUp = iptables -C INPUT -i %i -j ACCEPT 2>/dev/null || iptables -I INPUT 1 -i %i -j ACCEPT
 PostUp = iptables -C FORWARD -i %i -j ACCEPT 2>/dev/null || iptables -I FORWARD 1 -i %i -j ACCEPT
 PostUp = iptables -C FORWARD -o %i -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT 2>/dev/null || iptables -I FORWARD 1 -o %i -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
 PostUp = iptables -t nat -C POSTROUTING -s 10.44.0.0/24 -o WAN_IF -j MASQUERADE 2>/dev/null || iptables -t nat -A POSTROUTING -s 10.44.0.0/24 -o WAN_IF -j MASQUERADE
@@ -215,6 +215,8 @@ sudo systemctl enable wg-quick@wg0
 sudo systemctl restart wg-quick@wg0
 sudo systemctl status wg-quick@wg0 --no-pager
 ```
+
+If `wg-quick` fails with `iptables: Index of insertion too big`, your `INPUT` chain has fewer rules than the template expected. Replace any remaining `iptables -I INPUT 5` entries in `/etc/wireguard/wg0.conf` with `iptables -I INPUT 1`, then restart `wg-quick@wg0`.
 
 Verify:
 
