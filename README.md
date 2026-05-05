@@ -133,6 +133,13 @@ node bin/wgwrap.js server --listen 0.0.0.0:9091 --wireguard 127.0.0.1:51820 --pa
 node bin/wgwrap.js client --listen 127.0.0.1:51821 --remote YOUR_SERVER_IP:9091 --pad-min 900 --pad-max 1280 --prefix 7a21c90e
 ```
 
+If a network path fails with random padding bytes, use `--pad-bytes zero` to reproduce the legacy padding byte shape while keeping the latest code:
+
+```bash
+node bin/wgwrap.js server --listen 0.0.0.0:9091 --wireguard 127.0.0.1:51820 --pad-to 1510 --pad-bytes zero --reply-mode wrapped
+node bin/wgwrap.js client --listen 127.0.0.1:51821 --remote YOUR_SERVER_IP:9091 --pad-to 1510 --pad-bytes zero
+```
+
 ## Documentation
 
 - `docs/server-setup.md`: Ubuntu server setup, WireGuard config, iptables, Oracle/Docker notes, and systemd service.

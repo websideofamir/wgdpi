@@ -26,6 +26,17 @@ describe('protocol wrapper', () => {
     expect(padding.some((byte) => byte !== 0)).toBe(true);
   });
 
+  it('can wrap packets with legacy zero padding', () => {
+    const handshake = Buffer.alloc(148, 0xaa);
+    handshake.writeUInt32LE(1, 0);
+
+    const wrapped = wrapPacket(handshake, { padTo: 1510, padBytes: 'zero' });
+
+    expect(wrapped).toHaveLength(1510);
+    expect(wrapped.subarray(6, 154)).toEqual(handshake);
+    expect(wrapped.subarray(154).every((byte) => byte === 0)).toBe(true);
+  });
+
   it('unwraps packets and reports padding length', () => {
     const packet = Buffer.alloc(92, 0xbb);
     packet.writeUInt32LE(2, 0);

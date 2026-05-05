@@ -13,6 +13,7 @@ export function parseCliArgs(argv) {
   const padMin = parseIntegerFlag(flags, 'pad-min', undefined);
   const padMax = parseIntegerFlag(flags, 'pad-max', undefined);
   const prefix = parsePrefixFlag(flags, 'prefix', DEFAULT_PREFIX);
+  const padBytes = parseEnumFlag(flags, 'pad-bytes', 'random', ['random', 'zero']);
   const logIntervalMs = parseIntegerFlag(flags, 'log-interval-ms', DEFAULT_LOG_INTERVAL_MS);
 
   if ((padMin === undefined) !== (padMax === undefined)) {
@@ -37,6 +38,7 @@ export function parseCliArgs(argv) {
       padMin,
       padMax,
       prefix,
+      padBytes,
       logIntervalMs,
     };
   }
@@ -53,6 +55,7 @@ export function parseCliArgs(argv) {
     padMin,
     padMax,
     prefix,
+    padBytes,
     logIntervalMs,
   };
 }
@@ -69,6 +72,7 @@ Options:
   --pad-to BYTES               Fixed wrapped UDP payload size. Default: 1510.
   --pad-min BYTES              Minimum random wrapped UDP payload size.
   --pad-max BYTES              Maximum random wrapped UDP payload size.
+  --pad-bytes MODE             Padding bytes: random or zero. Default: random.
   --prefix HEX                 4-byte wrapper prefix as 8 hex chars. Default: 00000000.
   --reply-mode MODE            Server replies: plain or wrapped. Default: plain.
   --allow-plain-clients        Server accepts unwrapped client packets too.
@@ -142,6 +146,19 @@ function parsePrefixFlag(flags, name, fallback) {
   }
 
   return Buffer.from(value, 'hex');
+}
+
+function parseEnumFlag(flags, name, fallback, allowedValues) {
+  const value = flags[name];
+  if (value === undefined) {
+    return fallback;
+  }
+
+  if (value === true || !allowedValues.includes(value)) {
+    throw new Error(`--${name} must be one of: ${allowedValues.join(', ')}`);
+  }
+
+  return value;
 }
 
 function required(flags, name) {

@@ -250,6 +250,8 @@ node bin/wgwrap.js client --listen 127.0.0.1:51821 --remote YOUR_SERVER_IP:9091 
 
 The same `--prefix`, `--pad-min`, and `--pad-max` values must be configured on both sides.
 
+Use `--pad-bytes zero` when you need to reproduce the legacy zero-padding byte shape for comparison.
+
 Configure the WireGuard macOS app to use the local wrapper as its endpoint:
 
 ```ini

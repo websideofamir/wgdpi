@@ -113,7 +113,8 @@ export async function createServerWrapper(options) {
   logger.log(
     `server wrapper listening on ${options.listen.host}:${options.listen.port}, `
       + `forwarding to WireGuard at ${options.wireguard.host}:${options.wireguard.port}, `
-      + `reply mode ${replyMode}, ${paddingDescription(options)}, prefix ${formatPrefix(options.prefix)}`,
+      + `reply mode ${replyMode}, ${paddingDescription(options)}, `
+      + `pad bytes ${options.padBytes ?? 'random'}, prefix ${formatPrefix(options.prefix)}`,
   );
 
   logTimer = startTrafficSummary('server', counters, () => lastClientEndpoint, logger, options.logIntervalMs);
@@ -135,6 +136,7 @@ function wrapperOptions(options) {
     padMin: options.padMin,
     padMax: options.padMax,
     prefix: options.prefix,
+    padBytes: options.padBytes,
   };
 }
 

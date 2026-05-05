@@ -25,6 +25,7 @@ export class ProtocolError extends Error {
  */
 export function wrapPacket(packet, options = {}) {
   const prefix = options.prefix ?? DEFAULT_PREFIX;
+  const padBytes = options.padBytes ?? 'random';
 
   if (!Buffer.isBuffer(packet)) {
     throw new ProtocolError('packet must be a Buffer');
@@ -32,6 +33,10 @@ export function wrapPacket(packet, options = {}) {
 
   if (prefix.length !== 4) {
     throw new ProtocolError('prefix must be exactly 4 bytes');
+  }
+
+  if (!['random', 'zero'].includes(padBytes)) {
+    throw new ProtocolError('padBytes must be either "random" or "zero"');
   }
 
   if (packet.length > 0xffff) {
@@ -51,7 +56,7 @@ export function wrapPacket(packet, options = {}) {
   packet.copy(wrapped, WRAPPER_HEADER_LENGTH);
 
   const paddingLength = targetLength - minimumLength;
-  if (paddingLength > 0) {
+  if (paddingLength > 0 && padBytes === 'random') {
     randomFillSync(wrapped, minimumLength, paddingLength);
   }
 

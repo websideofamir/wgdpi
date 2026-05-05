@@ -273,6 +273,12 @@ node bin/wgwrap.js server --listen 0.0.0.0:9091 --wireguard 127.0.0.1:51820 --pa
 
 The wrapper logs startup settings, the active client endpoint when it changes, first occurrences of dropped/error packets, and a traffic summary every 60 seconds. Use `--log-interval-ms 0` to disable periodic summaries.
 
+If the latest code fails but the old legacy profile worked, test exact legacy padding bytes with:
+
+```bash
+node bin/wgwrap.js server --listen 0.0.0.0:9091 --wireguard 127.0.0.1:51820 --pad-to 1510 --pad-bytes zero --reply-mode wrapped
+```
+
 ## Capture For Debugging
 
 Public wrapper traffic:

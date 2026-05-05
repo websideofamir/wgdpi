@@ -77,8 +77,10 @@ export async function createClientWrapper(options) {
 
   logger.log(
     `client wrapper listening on ${options.local.host}:${options.local.port}, `
+      + `remote socket ${formatAddress(remoteSocket.address())}, `
       + `forwarding to ${options.remote.host}:${options.remote.port}, `
-      + `${paddingDescription(options)}, prefix ${formatPrefix(options.prefix)}`,
+      + `${paddingDescription(options)}, pad bytes ${options.padBytes ?? 'random'}, `
+      + `prefix ${formatPrefix(options.prefix)}`,
   );
 
   logTimer = startTrafficSummary('client', counters, logger, options.logIntervalMs);
@@ -100,6 +102,7 @@ function wrapperOptions(options) {
     padMin: options.padMin,
     padMax: options.padMax,
     prefix: options.prefix,
+    padBytes: options.padBytes,
   };
 }
 
@@ -128,6 +131,10 @@ function paddingDescription(options) {
 
 function formatPrefix(prefix) {
   return `0x${(prefix ?? DEFAULT_PREFIX).toString('hex')}`;
+}
+
+function formatAddress(address) {
+  return `${address.address}:${address.port}`;
 }
 
 function bind(socket, port, host) {

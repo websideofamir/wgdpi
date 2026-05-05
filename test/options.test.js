@@ -10,6 +10,7 @@ describe('parseCliArgs', () => {
       '--remote', '203.0.113.10:9091',
       '--pad-min', '900',
       '--pad-max', '1280',
+      '--pad-bytes', 'zero',
       '--prefix', '7a21c90e',
     ]);
 
@@ -17,6 +18,7 @@ describe('parseCliArgs', () => {
       mode: 'client',
       padMin: 900,
       padMax: 1280,
+      padBytes: 'zero',
       local: { host: '127.0.0.1', port: 51821 },
       remote: { host: '203.0.113.10', port: 9091 },
     });
@@ -49,5 +51,14 @@ describe('parseCliArgs', () => {
       '--pad-min', '1280',
       '--pad-max', '900',
     ])).toThrow('--pad-max must be greater than or equal to --pad-min');
+  });
+
+  it('validates padding byte mode', () => {
+    expect(() => parseCliArgs([
+      'client',
+      '--listen', '127.0.0.1:51821',
+      '--remote', '203.0.113.10:9091',
+      '--pad-bytes', 'garbage',
+    ])).toThrow('--pad-bytes must be one of: random, zero');
   });
 });

@@ -100,6 +100,12 @@ node bin/wgwrap.js client --listen 127.0.0.1:51821 --remote YOUR_SERVER_IP:9091 
 
 The wrapper logs startup settings, the active local WireGuard peer when it changes, first occurrences of dropped/error packets, and a traffic summary every 60 seconds. Use `--log-interval-ms 0` to disable periodic summaries.
 
+If the latest code fails but the old legacy profile worked, test exact legacy padding bytes with:
+
+```bash
+node bin/wgwrap.js client --listen 127.0.0.1:51821 --remote YOUR_SERVER_IP:9091 --pad-to 1510 --pad-bytes zero
+```
+
 ## Split Tunnel Mode
 
 Use split tunnel first. It only routes the VPN subnet through the tunnel and avoids route-loop problems.
