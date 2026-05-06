@@ -2,7 +2,7 @@
 
 This file records how to deploy the standalone `obfswrap/` encrypted wrapper with an Ubuntu server systemd service and a manually started macOS client wrapper.
 
-`obfswrap` is separate from the older `wgwrap` implementation. It does not use a public prefix. This profile pads every public UDP payload to `1510` bytes to preserve the packet-size behavior that worked before.
+`obfswrap` is separate from the older `wgwrap` implementation. It does not use a public prefix. This profile pads WireGuard handshake/control packets to public UDP payload length `1510` while leaving transport data unpadded.
 
 Public packet format:
 
@@ -25,7 +25,8 @@ Testing target:
 - Client WireGuard points to a local obfswrap endpoint.
 - Server and client use the same deterministic secret source.
 - No public prefix is used.
-- Every obfswrap packet is padded to public UDP payload length `1510` unless the inner packet is already larger.
+- WireGuard handshake/control packets are padded to public UDP payload length `1510`.
+- WireGuard transport data packets are not padded in this profile.
 
 This is a new profile and should be tested first with split tunnel before full tunnel.
 
@@ -361,7 +362,7 @@ Wants=network-online.target
 [Service]
 WorkingDirectory=/opt/wgdpi
 EnvironmentFile=/etc/wgdpi/obfswrap.env
-ExecStart=/usr/bin/node /opt/wgdpi/obfswrap/bin/obfswrap.js server --listen 0.0.0.0:9091 --wireguard 127.0.0.1:51820 --seed-hex ${OBFS_SEED_HEX} --salt ${OBFS_SALT} --pad-to 1510 --log-interval-ms 10000
+ExecStart=/usr/bin/node /opt/wgdpi/obfswrap/bin/obfswrap.js server --listen 0.0.0.0:9091 --wireguard 127.0.0.1:51820 --seed-hex ${OBFS_SEED_HEX} --salt ${OBFS_SALT} --pad-to 1510 --pad-mode handshake --log-interval-ms 10000
 Restart=always
 RestartSec=2
 User=root
@@ -382,7 +383,7 @@ Expected startup log includes:
 
 ```text
 obfs server listening on 0.0.0.0:9091, forwarding to WireGuard at 127.0.0.1:51820
-nonce=12, tag=8, fixed padding length 1510, prefix=none
+nonce=12, tag=8, fixed padding length 1510, pad mode handshake, prefix=none
 ```
 
 View logs with:
@@ -437,6 +438,7 @@ node ~/wgdpi/obfswrap/bin/obfswrap.js client \
   --salt "${OBFS_SALT}" \
   --key-id "${OBFS_KEY_ID}" \
   --pad-to 1510 \
+  --pad-mode handshake \
   --log-interval-ms 10000
 ```
 
@@ -444,7 +446,7 @@ Expected startup log includes:
 
 ```text
 obfs client listening on 127.0.0.1:51821
-key_id=999999, nonce=12, tag=8, fixed padding length 1510, prefix=none
+key_id=999999, nonce=12, tag=8, fixed padding length 1510, pad mode handshake, prefix=none
 ```
 
 Keep this terminal open while testing. Stop it with `Ctrl-C`.
@@ -579,7 +581,7 @@ On macOS client:
 set -a
 . ~/.config/wgdpi/obfswrap.env
 set +a
-node ~/wgdpi/obfswrap/bin/obfswrap.js client --listen 127.0.0.1:51821 --remote "${OBFS_SERVER}:9091" --seed-hex "${OBFS_SEED_HEX}" --salt "${OBFS_SALT}" --key-id "${OBFS_KEY_ID}" --pad-to 1510 --log-interval-ms 10000
+node ~/wgdpi/obfswrap/bin/obfswrap.js client --listen 127.0.0.1:51821 --remote "${OBFS_SERVER}:9091" --seed-hex "${OBFS_SEED_HEX}" --salt "${OBFS_SALT}" --key-id "${OBFS_KEY_ID}" --pad-to 1510 --pad-mode handshake --log-interval-ms 10000
 ```
 
 Then connect the client WireGuard tunnel that points to:
@@ -646,7 +648,7 @@ Expected public UDP payload has no fixed prefix and no visible WireGuard type. F
 0f423f
 ```
 
-Then 12 nonce bytes, encrypted bytes, and an 8-byte tag.
+Then 12 nonce bytes, encrypted bytes, and an 8-byte tag. With `--pad-mode handshake`, WireGuard handshake/control packets should have public UDP payload length `1510`; transport packets will usually be smaller unless the encrypted packet itself is larger.
 
 Server local WireGuard traffic:
 
@@ -658,9 +660,9 @@ Expected local traffic still contains normal stock WireGuard packets, because ob
 
 ## Known Limitation
 
-This profile pads every public obfswrap packet to `1510` bytes unless the inner packet is already larger.
+This profile pads only WireGuard handshake/control packets to `1510` bytes.
 
-That restores the packet-size behavior from the latest working profile, but it also restores the same high-volume downlink limitation: YouTube and speedtest can cause fragmentation, queue pressure, and ping drops under traffic surge.
+That reduces bandwidth and downlink padding amplification compared to padding every packet, but it may be weaker against DPI than the previous latest-working profile where every packet was padded to `1510`.
 
 This profile also does not hide:
 

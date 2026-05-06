@@ -31,6 +31,7 @@ describe('obfs wrapper forwarding', () => {
       seedHex,
       salt: 'integration',
       padTo: 1510,
+      padMode: 'handshake',
       logger: silentLogger,
       logIntervalMs: 0,
     });
@@ -43,6 +44,7 @@ describe('obfs wrapper forwarding', () => {
       salt: 'integration',
       keyId: 999_999,
       padTo: 1510,
+      padMode: 'handshake',
       logger: silentLogger,
       logIntervalMs: 0,
     });

@@ -2,6 +2,7 @@ import dgram from 'node:dgram';
 
 import { EndpointMap } from './endpoint-map.js';
 import { createSecretResolver } from './key-derivation.js';
+import { paddingDescription, paddingForPacket } from './padding.js';
 import { TAG_BYTES, NONCE_BYTES, encodePacket, decodePacket } from './protocol.js';
 
 export async function createServer(options) {
@@ -68,7 +69,7 @@ export async function createServer(options) {
 
     try {
       const secret = secrets.get(endpoint.keyId);
-      const encrypted = encodePacket(packet, { keyId: endpoint.keyId, secret, padTo: options.padTo });
+      const encrypted = encodePacket(packet, { keyId: endpoint.keyId, secret, padTo: paddingForPacket(packet, options) });
       counters.encryptedReplies += 1;
       counters.repliesSent += 1;
       publicSocket.send(encrypted, endpoint.port, endpoint.address);
@@ -137,8 +138,4 @@ function bind(socket, port, host) {
     socket.once('listening', onListening);
     socket.bind(port, host);
   });
-}
-
-function paddingDescription(options) {
-  return options.padTo ? `fixed padding length ${options.padTo}` : 'padding=none';
 }

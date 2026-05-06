@@ -61,6 +61,7 @@ Options:
   --seed-hex HEX               32-byte hex seed for deterministic on-demand secrets.
   --salt TEXT                  Non-empty deployment salt used with --seed-hex.
   --pad-to BYTES               Fixed public UDP payload size. Default: no padding.
+  --pad-mode MODE              Padding mode: all or handshake. Default: all.
   --endpoint-ttl-ms MS         Server endpoint mapping TTL. Default: 180000.
   --log-interval-ms MS         Periodic traffic summary interval. Default: 60000. Use 0 to disable.
 `;
@@ -97,6 +98,7 @@ function parseCommonOptions(flags) {
     seedHex,
     salt,
     padTo: parsePadTo(flags),
+    padMode: parseEnumFlag(flags, 'pad-mode', 'all', ['all', 'handshake']),
     logIntervalMs: parseIntegerFlag(flags, 'log-interval-ms', DEFAULT_LOG_INTERVAL_MS),
   };
 }
@@ -163,6 +165,19 @@ function parsePadTo(flags) {
   }
 
   return padTo;
+}
+
+function parseEnumFlag(flags, name, fallback, allowedValues) {
+  const value = flags[name];
+  if (value === undefined) {
+    return fallback;
+  }
+
+  if (value === true || !allowedValues.includes(value)) {
+    throw new Error(`--${name} must be one of: ${allowedValues.join(', ')}`);
+  }
+
+  return value;
 }
 
 function parseKeyId(value, flagName) {

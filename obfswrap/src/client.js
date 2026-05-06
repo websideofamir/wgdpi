@@ -1,6 +1,7 @@
 import dgram from 'node:dgram';
 
 import { createSecretResolver } from './key-derivation.js';
+import { paddingDescription, paddingForPacket } from './padding.js';
 import { TAG_BYTES, NONCE_BYTES, encodePacket, decodePacket } from './protocol.js';
 
 export async function createClient(options) {
@@ -36,7 +37,7 @@ export async function createClient(options) {
     }
 
     try {
-      const encrypted = encodePacket(packet, { keyId: options.keyId, secret: selectedSecret, padTo: options.padTo });
+      const encrypted = encodePacket(packet, { keyId: options.keyId, secret: selectedSecret, padTo: paddingForPacket(packet, options) });
       counters.encryptedPackets += 1;
       remoteSocket.send(encrypted, options.remote.port, options.remote.host);
     } catch (error) {
@@ -114,10 +115,6 @@ function startTrafficSummary(name, counters, logger, intervalMs) {
 
 function formatAddress(address) {
   return `${address.address}:${address.port}`;
-}
-
-function paddingDescription(options) {
-  return options.padTo ? `fixed padding length ${options.padTo}` : 'padding=none';
 }
 
 function bind(socket, port, host) {
