@@ -1,4 +1,5 @@
 import { MAX_KEY_ID } from './key-derivation.js';
+import { MAX_UDP_PAYLOAD } from './protocol.js';
 
 const DEFAULT_LOG_INTERVAL_MS = 60_000;
 
@@ -59,6 +60,7 @@ Options:
   --secrets PATH               Secret list file, one 32-byte hex secret per line.
   --seed-hex HEX               32-byte hex seed for deterministic on-demand secrets.
   --salt TEXT                  Non-empty deployment salt used with --seed-hex.
+  --pad-to BYTES               Fixed public UDP payload size. Default: no padding.
   --endpoint-ttl-ms MS         Server endpoint mapping TTL. Default: 180000.
   --log-interval-ms MS         Periodic traffic summary interval. Default: 60000. Use 0 to disable.
 `;
@@ -94,6 +96,7 @@ function parseCommonOptions(flags) {
     secretsPath,
     seedHex,
     salt,
+    padTo: parsePadTo(flags),
     logIntervalMs: parseIntegerFlag(flags, 'log-interval-ms', DEFAULT_LOG_INTERVAL_MS),
   };
 }
@@ -150,6 +153,16 @@ function parseIntegerFlag(flags, name, fallback) {
   }
 
   return value;
+}
+
+function parsePadTo(flags) {
+  const padTo = parseIntegerFlag(flags, 'pad-to', 0);
+
+  if (padTo > MAX_UDP_PAYLOAD) {
+    throw new Error(`--pad-to must be less than or equal to ${MAX_UDP_PAYLOAD}`);
+  }
+
+  return padTo;
 }
 
 function parseKeyId(value, flagName) {

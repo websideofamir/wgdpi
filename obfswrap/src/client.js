@@ -36,7 +36,7 @@ export async function createClient(options) {
     }
 
     try {
-      const encrypted = encodePacket(packet, { keyId: options.keyId, secret: selectedSecret });
+      const encrypted = encodePacket(packet, { keyId: options.keyId, secret: selectedSecret, padTo: options.padTo });
       counters.encryptedPackets += 1;
       remoteSocket.send(encrypted, options.remote.port, options.remote.host);
     } catch (error) {
@@ -81,7 +81,7 @@ export async function createClient(options) {
       + `remote socket ${formatAddress(remoteSocket.address())}, `
       + `forwarding to ${options.remote.host}:${options.remote.port}, `
       + `secret source ${secrets.type}, secrets=${secrets.size}, key_id=${options.keyId}, `
-      + `nonce=${NONCE_BYTES}, tag=${TAG_BYTES}, padding=none, prefix=none`,
+      + `nonce=${NONCE_BYTES}, tag=${TAG_BYTES}, ${paddingDescription(options)}, prefix=none`,
   );
 
   logTimer = startTrafficSummary('client', counters, logger, options.logIntervalMs);
@@ -114,6 +114,10 @@ function startTrafficSummary(name, counters, logger, intervalMs) {
 
 function formatAddress(address) {
   return `${address.address}:${address.port}`;
+}
+
+function paddingDescription(options) {
+  return options.padTo ? `fixed padding length ${options.padTo}` : 'padding=none';
 }
 
 function bind(socket, port, host) {

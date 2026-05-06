@@ -1,4 +1,4 @@
-import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
+import { createCipheriv, createDecipheriv, randomBytes, randomFillSync } from 'node:crypto';
 
 import { KEY_ID_BYTES, decodeKeyId, encodeKeyId } from './key-derivation.js';
 
@@ -8,8 +8,10 @@ export const INNER_LENGTH_BYTES = 2;
 export const NONCE_BYTES = 12;
 export const TAG_BYTES = 8;
 export const MAX_INNER_LENGTH = 0xffff;
+export const MAX_UDP_PAYLOAD = 65507;
 export const CIPHER = 'chacha20-poly1305';
 export const PUBLIC_HEADER_BYTES = KEY_ID_BYTES + NONCE_BYTES;
+export const FIXED_OVERHEAD_BYTES = PUBLIC_HEADER_BYTES + TAG_BYTES;
 export const MIN_PLAINTEXT_BYTES = VERSION_BYTES + INNER_LENGTH_BYTES;
 export const MIN_PACKET_BYTES = PUBLIC_HEADER_BYTES + TAG_BYTES;
 
@@ -20,15 +22,22 @@ export class ProtocolError extends Error {
   }
 }
 
-export function encodePacket(innerPacket, { keyId, secret }) {
+export function encodePacket(innerPacket, { keyId, secret, padTo }) {
   validateInnerPacket(innerPacket);
   validateSecret(secret);
 
   const nonce = randomBytes(NONCE_BYTES);
-  const plaintext = Buffer.alloc(MIN_PLAINTEXT_BYTES + innerPacket.length);
+  const minimumPlaintextLength = MIN_PLAINTEXT_BYTES + innerPacket.length;
+  const plaintextLength = choosePlaintextLength(minimumPlaintextLength, padTo);
+  const plaintext = Buffer.alloc(plaintextLength);
   plaintext[0] = VERSION;
   plaintext.writeUInt16LE(innerPacket.length, VERSION_BYTES);
   innerPacket.copy(plaintext, MIN_PLAINTEXT_BYTES);
+
+  const paddingOffset = MIN_PLAINTEXT_BYTES + innerPacket.length;
+  if (paddingOffset < plaintext.length) {
+    randomFillSync(plaintext, paddingOffset);
+  }
 
   const cipher = createCipheriv(CIPHER, secret, nonce, { authTagLength: TAG_BYTES });
   cipher.setAAD(encodeKeyId(keyId));
@@ -82,8 +91,8 @@ export function decodePacket(packet, secretResolver) {
     throw new ProtocolError('inner packet is empty');
   }
 
-  if (end !== plaintext.length) {
-    throw new ProtocolError('decrypted packet length does not match inner_length');
+  if (end > plaintext.length) {
+    throw new ProtocolError('decrypted packet length exceeds plaintext length');
   }
 
   return {
@@ -110,4 +119,21 @@ function validateSecret(secret) {
   if (!Buffer.isBuffer(secret) || secret.length !== 32) {
     throw new ProtocolError('secret must be exactly 32 bytes');
   }
+}
+
+function choosePlaintextLength(minimumPlaintextLength, padTo) {
+  if (padTo === undefined || padTo === 0) {
+    return minimumPlaintextLength;
+  }
+
+  if (!Number.isInteger(padTo) || padTo < 0) {
+    throw new ProtocolError('padTo must be a non-negative integer');
+  }
+
+  if (padTo > MAX_UDP_PAYLOAD) {
+    throw new ProtocolError(`padTo must be less than or equal to ${MAX_UDP_PAYLOAD}`);
+  }
+
+  const targetPlaintextLength = padTo - FIXED_OVERHEAD_BYTES;
+  return Math.max(minimumPlaintextLength, targetPlaintextLength);
 }

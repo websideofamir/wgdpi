@@ -13,12 +13,14 @@ describe('obfswrap options', () => {
       '--seed-hex', seedHex,
       '--salt', 'profile',
       '--key-id', '999999',
+      '--pad-to', '1510',
     ]);
 
     expect(options.mode).toBe('client');
     expect(options.keyId).toBe(999_999);
     expect(options.local).toEqual({ host: '127.0.0.1', port: 51821 });
     expect(options.remote).toEqual({ host: '1.2.3.4', port: 9091 });
+    expect(options.padTo).toBe(1510);
   });
 
   it('parses server options with secret list', () => {

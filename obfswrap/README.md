@@ -10,12 +10,12 @@ Public UDP payload:
 [key_id:3] [nonce:12] [ciphertext] [tag:8]
 ```
 
-There is no public prefix and no padding.
+There is no public prefix. Padding is optional with `--pad-to`; when enabled, padding bytes are encrypted inside the ciphertext.
 
 Encrypted plaintext:
 
 ```text
-[version:1] [inner_length:2] [raw_wireguard_packet]
+[version:1] [inner_length:2] [raw_wireguard_packet] [optional_random_padding]
 ```
 
 The current cipher is `chacha20-poly1305` from Node's built-in `node:crypto`, with a 12-byte nonce and 8-byte authentication tag.
@@ -31,7 +31,8 @@ node obfswrap/bin/obfswrap.js server \
   --listen 0.0.0.0:9091 \
   --wireguard 127.0.0.1:51820 \
   --seed-hex 9f2b7c4a81d3e0b7f5a60d9a3c11e274ba69cd04f43a830611e09db2320f91aa \
-  --salt iran-home-v1
+  --salt iran-home-v1 \
+  --pad-to 1510
 ```
 
 ```bash
@@ -40,7 +41,8 @@ node obfswrap/bin/obfswrap.js client \
   --remote SERVER_IP:9091 \
   --seed-hex 9f2b7c4a81d3e0b7f5a60d9a3c11e274ba69cd04f43a830611e09db2320f91aa \
   --salt iran-home-v1 \
-  --key-id 999999
+  --key-id 999999 \
+  --pad-to 1510
 ```
 
 Or load a list from a file:
@@ -49,7 +51,8 @@ Or load a list from a file:
 node obfswrap/bin/obfswrap.js server \
   --listen 0.0.0.0:9091 \
   --wireguard 127.0.0.1:51820 \
-  --secrets ./secrets.txt
+  --secrets ./secrets.txt \
+  --pad-to 1510
 ```
 
 ```bash
@@ -57,7 +60,8 @@ node obfswrap/bin/obfswrap.js client \
   --listen 127.0.0.1:51821 \
   --remote SERVER_IP:9091 \
   --secrets ./secrets.txt \
-  --key-id 999999
+  --key-id 999999 \
+  --pad-to 1510
 ```
 
 ## Deterministic Secret Generation
@@ -89,6 +93,8 @@ For one million secrets, `key_id = 999999` is encoded as:
 ## Notes
 
 - `--key-id` is a 3-byte integer from `0` to `16777215`.
+- `--pad-to 1510` pads every public UDP payload to 1510 bytes unless the encrypted WireGuard packet is already larger.
+- `--pad-to 0` or omitting `--pad-to` disables padding.
 - `--seed-hex` must be 32 random bytes encoded as 64 hex characters.
 - The wrapper secret is separate from WireGuard keys.
 - The real server IP still needs a route exception on full-tunnel clients, same as the original local-wrapper setup.

@@ -68,7 +68,7 @@ export async function createServer(options) {
 
     try {
       const secret = secrets.get(endpoint.keyId);
-      const encrypted = encodePacket(packet, { keyId: endpoint.keyId, secret });
+      const encrypted = encodePacket(packet, { keyId: endpoint.keyId, secret, padTo: options.padTo });
       counters.encryptedReplies += 1;
       counters.repliesSent += 1;
       publicSocket.send(encrypted, endpoint.port, endpoint.address);
@@ -88,7 +88,7 @@ export async function createServer(options) {
     `obfs server listening on ${options.listen.host}:${options.listen.port}, `
       + `forwarding to WireGuard at ${options.wireguard.host}:${options.wireguard.port}, `
       + `secret source ${secrets.type}, secrets=${secrets.size}, `
-      + `nonce=${NONCE_BYTES}, tag=${TAG_BYTES}, padding=none, prefix=none`,
+      + `nonce=${NONCE_BYTES}, tag=${TAG_BYTES}, ${paddingDescription(options)}, prefix=none`,
   );
 
   logTimer = startTrafficSummary('server', counters, () => lastClientEndpoint, logger, options.logIntervalMs);
@@ -137,4 +137,8 @@ function bind(socket, port, host) {
     socket.once('listening', onListening);
     socket.bind(port, host);
   });
+}
+
+function paddingDescription(options) {
+  return options.padTo ? `fixed padding length ${options.padTo}` : 'padding=none';
 }

@@ -30,6 +30,7 @@ describe('obfs wrapper forwarding', () => {
       wireguard: { host: '127.0.0.1', port: wireGuardServer.address().port },
       seedHex,
       salt: 'integration',
+      padTo: 1510,
       logger: silentLogger,
       logIntervalMs: 0,
     });
@@ -41,6 +42,7 @@ describe('obfs wrapper forwarding', () => {
       seedHex,
       salt: 'integration',
       keyId: 999_999,
+      padTo: 1510,
       logger: silentLogger,
       logIntervalMs: 0,
     });

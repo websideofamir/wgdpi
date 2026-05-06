@@ -33,6 +33,32 @@ describe('obfs protocol', () => {
     expect(decoded.packet).toEqual(inner);
   });
 
+  it('pads the public UDP payload to a fixed length while encrypting padding', () => {
+    const keyId = 999_999;
+    const secret = deriveSecret(seed, salt, keyId);
+    const inner = Buffer.alloc(148);
+    inner.writeUInt32LE(1, 0);
+
+    const encoded = encodePacket(inner, { keyId, secret, padTo: 1510 });
+    const decoded = decodePacket(encoded, { get: () => secret });
+
+    expect(encoded).toHaveLength(1510);
+    expect(decoded.packet).toEqual(inner);
+  });
+
+  it('does not truncate packets that are larger than the fixed padding target', () => {
+    const keyId = 7;
+    const secret = deriveSecret(seed, salt, keyId);
+    const inner = Buffer.alloc(1600);
+    inner.writeUInt32LE(4, 0);
+
+    const encoded = encodePacket(inner, { keyId, secret, padTo: 1510 });
+    const decoded = decodePacket(encoded, { get: () => secret });
+
+    expect(encoded.length).toBeGreaterThan(1510);
+    expect(decoded.packet).toEqual(inner);
+  });
+
   it('does not expose the WireGuard type at a fixed plaintext offset', () => {
     const keyId = 3;
     const secret = deriveSecret(seed, salt, keyId);
